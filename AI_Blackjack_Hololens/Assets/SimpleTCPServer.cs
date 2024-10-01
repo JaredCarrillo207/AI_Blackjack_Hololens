@@ -12,12 +12,16 @@ public class SimpleTCPServer : MonoBehaviour
     private Thread tcpListenerThread;
     private TcpClient connectedTcpClient;
     private bool isRunning = false;
+    private string lastMessage = ""; // Store the last received message
 
     // Port to listen on
     public int port = 8052;
 
     // Reference to the TextMeshPro object in the scene
     public TextMeshProUGUI displayText;
+
+    // Flag to check if the final message has been detected
+    private bool finalMessageReceived = false;
 
     // Start is called before the first frame update
     void Start()
@@ -43,10 +47,35 @@ public class SimpleTCPServer : MonoBehaviour
                 // Convert bytes to string
                 string message = Encoding.ASCII.GetString(buffer, 0, bytesRead);
 
-                // Update TextMeshPro object instead of logging
-                UpdateDisplayText(message);
+                // Store the last received message
+                lastMessage = message;
+
+                // If this is the final message (e.g., an array of card indices), update the text to "Cards Detected"
+                if (IsFinalMessage(message))
+                {
+                    finalMessageReceived = true;
+                    UpdateDisplayText("Cards Detected");
+                }
+                else
+                {
+                    // Update the TextMeshPro object with the incoming message
+                    UpdateDisplayText(message);
+                }
             }
         }
+    }
+
+    // Method to check if the message is the final message
+    private bool IsFinalMessage(string message)
+    {
+        // Assuming the final message has the format "[...]" with numbers inside
+        return message.StartsWith("[") && message.EndsWith("]");
+    }
+
+    // Method to get the last received message
+    public string GetLastMessage()
+    {
+        return lastMessage;
     }
 
     // Start listening for incoming client connections
